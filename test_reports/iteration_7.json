@@ -1,0 +1,32 @@
+{
+  "summary": "All 3 regression fixes from iteration 6 verified. Backend: 7/7 pytest passing including new 422 test on POST /api/sync with amount_minor=0. Frontend at 390x844: sheet-workspace, sheet-account, sheet-expense, sheet-budget all render on-viewport (sheet-save y between 463-595, all inside 844px height). FAB visible at y=700. End-to-end mobile flow succeeds: create workspace 'TEST Personal' -> create account 'TEST Wallet' -> FAB opens expense sheet -> add 'TEST Coffee' 250.75 -> ledger tab shows entry -> budgets tab -> create budget 5000 -> spending tab shows content. No 'shadow*' or 'pointerEvents' deprecation warnings observed in browser console (0 warnings/errors total). Sync-error-banner not exercised (backend healthy, same as iter 6).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Sync error banner", "issue": "testID sync-error-banner path not reachable in a healthy environment; would require induced network failure or a dev toggle. Not a bug — carried over from iter 6.", "affected_testIDs": ["sync-error-banner"]}
+    ],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_ledgerly_api.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Optional: add a dev/QA toggle in SyncScreen to force a sync failure so testID sync-error-banner can be exercised in preview."
+  ],
+  "critical_code_review_comments": [
+    "backend/tests/test_ledgerly_api.py originally read only EXPO_BACKEND_URL; the preview env exposes EXPO_PUBLIC_BACKEND_URL. Updated the test to fall back to EXPO_PUBLIC_BACKEND_URL so pytest works both locally and in preview.",
+    "BottomSheetForm cleanly branches on Platform.OS==='web' using position:'fixed' overlay pinned to viewport bottom — good fix. Same pattern applied consistently in WorkspaceSwitcher.",
+    "server.py /api/sync now wraps TransactionIn(**payload) in try/except and raises 422 with the offending event id — matches request; still not per-event isolated (first bad payload aborts the whole batch) but that's acceptable behavior."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ledgerly_api.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/iteration_7.json"
+  ],
+  "success_rate": {"backend": "100% (7/7)", "frontend": "100% for regression scope; sync-error-banner path not exercised"},
+  "seed_data_creation": "Backend tests seed TEST_ workspace + TEST_ account + TEST_ transactions. Frontend flow seeded 'TEST Personal' workspace, 'TEST Wallet' account, 'TEST Coffee' 250.75 expense, budget 5000.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 4 BottomSheetForm variants render on-viewport at 390x844 (sheet-save y in [463,595]). Backend returns 422 for invalid nested transaction payload. Console clean — no shadow*/pointerEvents warnings. End-to-end flow verified. If further iterations are needed, focus on sync-error-banner path via induced failure (invalid backend URL or offline mode) and per-event isolation in /api/sync.",
+  "rca_of_issue": "Not applicable — regression fixes all verified."
+}

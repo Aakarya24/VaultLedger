@@ -1,0 +1,48 @@
+{
+  "summary": "Preview loaded and workspace/account creation worked. Full expense flow was blocked by the mobile FAB being hidden behind the bottom tab bar; direct API checks found the frontend sync payload is incompatible with FastAPI.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/sync",
+        "issue": "Frontend sends camelCase OutboxEvent/Transaction fields (entityType, entityId, createdAt, workspaceId, amountMinor, etc.), but the FastAPI contract requires snake_case. A payload matching the frontend returns 422; snake_case succeeds.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Add expense FAB",
+        "issue": "At 375x667 the FAB is positioned underneath/behind the absolute bottom tab bar. Tapping Add expense does not open the modal, so the primary expense flow cannot be completed on mobile.",
+        "testID": "missing",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Sync now",
+        "issue": "When an expense is eventually queued, FinanceProvider.sync posts the camelCase object directly to /api/sync; backend rejects it with 422 and the outbox remains pending.",
+        "affected_testIDs": ["missing-add-expense-testID", "missing-sync-now-testID"]
+      }
+    ],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_1.json"],
+  "action_items": [
+    "Move the Add expense FAB above the bottom tab safe area or add sufficient ScrollView bottom inset and provide testIDs for interactive controls.",
+    "Serialize frontend outbox and transaction fields to the backend snake_case contract, or add explicit Pydantic aliases; retest sync end-to-end."
+  ],
+  "critical_code_review_comments": [
+    "FinanceProvider.sync uses process.env.EXPO_PUBLIC_BACKEND_URL; this matches the current .env but not the requested EXPO_BACKEND_URL naming convention, so environment configuration should be standardized.",
+    "Interactive controls in index.tsx have no testID attributes, reducing reliable mobile regression coverage."
+  ],
+  "updated_files": ["/app/test_reports/iteration_1.json"],
+  "success_rate": {"backend": "75%", "frontend": "50%"},
+  "seed_data_creation": "Created TEST_ workspace/account and one TEST_ transaction during direct API contract verification.",
+  "retest_needed": true,
+  "should_call_test_agent_after_fix": true,
+  "context_for_next_testing_agent": "Use one browser session at 375x667. Clear localStorage once at the start. Workspace and account creation pass; expense modal cannot be reached because the FAB is behind the bottom tabs. API /api/ root, workspace, and account creation pass.",
+  "rca_of_issue": "The FAB is rendered as the last child inside a ScrollView with marginTop but no bottom content inset, while the tab bar is absolute at bottom:0; on the short mobile viewport it is covered by the tabs. Sync serializes TypeScript camelCase objects without a translation layer, while FastAPI models declare snake_case fields."
+}

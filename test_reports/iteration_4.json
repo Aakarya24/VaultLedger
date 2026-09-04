@@ -1,0 +1,44 @@
+{
+  "summary": "Live preview loads at 375x667 and backend contracts pass, but workspace creation remains blocked: after typing, the modal Save securely action is outside the viewport.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Workspace creation bottom sheet",
+        "issue": "At the required 375x667 viewport, after filling the workspace input the keyboard/layout leaves Save securely outside the viewport; Playwright cannot tap it. This reproduces the prior blocker despite the KeyboardAvoidingView and ScrollView changes.",
+        "testID": "missing-save-securely",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Workspace -> account -> expense -> ledger -> spending -> sync",
+        "issue": "Blocked at workspace save, so downstream flows could not be verified in this run.",
+        "affected_testIDs": ["create-workspace", "add-expense", "sync-now"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Workspace creation bottom sheet",
+        "issues": ["Primary action is not reliably tappable while the keyboard is active on the target mobile viewport."]
+      }
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_4.json"],
+  "action_items": ["Make the modal primary action reliably reachable while the keyboard is open at 375x667 (for example, ensure the sheet ScrollView scrolls the focused input/action into view). Add testIDs for modal input and Save securely controls, then retest the complete flow."],
+  "critical_code_review_comments": [
+    "FinanceProvider.sync uses EXPO_PUBLIC_BACKEND_URL, while the requested environment contract names EXPO_BACKEND_URL; standardize or explicitly document this key across the app.",
+    "Sync failures and non-OK responses are silently ignored, leaving users without an error state or retry feedback."
+  ],
+  "updated_files": ["/app/test_reports/iteration_4.json"],
+  "success_rate": {"backend": "100%", "frontend": "20%"},
+  "seed_data_creation": "None created in this iteration.",
+  "retest_needed": true,
+  "should_call_test_agent_after_fix": true,
+  "context_for_next_testing_agent": "Use one clean browser session at 375x667. App load passes and create-workspace opens. Filling Personal then tapping Save securely reproduces an outside-viewport failure. GET /api/ and POST /api/sync with [] pass.",
+  "rca_of_issue": "The modal is bottom-aligned and its action remains below the visible mobile viewport when the TextInput is focused. The current keyboard-aware wrapper/ScrollView does not provide a reliable scroll-to-action behavior in Expo web at 375x667."
+}

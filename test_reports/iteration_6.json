@@ -1,0 +1,58 @@
+{
+  "summary": "Backend passes 6/7 (1 minor: 500 vs 422 on invalid payload inside SyncEvent). Full end-to-end mobile flow works: onboarding -> workspace -> account -> add-expense via FAB -> ledger -> budgets -> spending -> sync. FAB is now visible and clickable at 390x844 (bottom=700, well within viewport). HOWEVER a NEW critical web-preview bug found: the BottomSheetForm modal is rendered ~1357px below the top (well outside the 844px viewport) so its Save button (testID=sheet-save) is unreachable via a normal tap; the click succeeds only via JS. Deprecated style warnings observed: 'shadow*' style props (should be boxShadow) and 'pointerEvents' prop (should be style.pointerEvents).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/sync", "issue": "When a SyncEvent payload has amount_minor<=0 the endpoint returns HTTP 500 (unhandled Pydantic ValidationError on nested TransactionIn) instead of 400/422. Wrap TransactionIn(**event.payload) in try/except and raise HTTPException(422)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "BottomSheetForm (Modal)",
+        "issue": "On web preview at 390x844 the Modal renders outside the viewport: sheet top y≈1357, sheet-save y≈1421 while viewport height is 844. The user cannot tap Save. Playwright confirms 'Element is outside of the viewport' unless bypassed via JS click. Likely cause: RN <Modal> portal in RN-web sizes to document height (not viewport). Fix: replace Modal with an in-tree absolutely-positioned overlay (View style={position:'absolute', inset:0, justifyContent:'flex-end'}) or wrap the KeyboardAvoidingView in a fixed-position container with height:100vh (web only). Applies to workspace, account, expense, and budget sheets.",
+        "testID": "sheet-save / sheet-workspace / sheet-account / sheet-expense / sheet-budget",
+        "priority": "CRITICAL"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Sync",
+        "issue": "Could not exercise sync-error-banner because backend is healthy in this environment. Behavior of banner is only reachable via induced failure (e.g., invalid EXPO_PUBLIC_BACKEND_URL). Consider adding a hidden dev toggle to force-fail sync for QA, or a mocked failure test. Success path verified (Synced 1 change toast + outbox cleared)."
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "All sheets on web",
+        "issues": ["Modal off-viewport (see ui_bug above).", "Cancel button is at the bottom of scroll content — with the sheet already offscreen the user has no way to dismiss it on web."]
+      }
+    ],
+    "react_native_issues": [
+      {"component": "Style deprecation", "issue": "Console warning: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' Reference: /app/frontend/app/index.tsx:211-214 (fab shadow*) and likely other primitives."},
+      {"component": "Prop deprecation", "issue": "Console warning: 'props.pointerEvents is deprecated. Use style.pointerEvents' — check @/src/shared/ui components (e.g., Toast/BottomSheetForm/Primitives)."}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_ledgerly_api.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Fix web Modal off-viewport bug in BottomSheetForm — this blocks tap-based Save on web preview. Suggested: on Platform.OS === 'web' render an in-tree overlay instead of RN <Modal>, or wrap the KeyboardAvoidingView so its parent has height:100vh.",
+    "Wrap nested TransactionIn construction in POST /api/sync with proper 422 error handling.",
+    "Address 'shadow*' and 'pointerEvents' deprecation warnings.",
+    "Add a QA hook or test for sync-error-banner (currently only reachable via network failure)."
+  ],
+  "critical_code_review_comments": [
+    "FinanceProvider.sync reads process.env.EXPO_PUBLIC_BACKEND_URL — good (matches frontend/.env). Backend test suite still relies on EXPO_BACKEND_URL for BASE_URL; consider aligning env var names project-wide.",
+    "server.py /api/sync happily accepts an empty list (returns []). Fine, but no per-event isolation: a single bad payload will 500 the entire batch instead of returning partial results — consider try/except per event and returning a structured accepted/rejected response.",
+    "BottomSheetForm 'Cancel' is inside the ScrollView content — if the sheet is small it renders below the fold and users may not see it."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ledgerly_api.py",
+    "/app/test_reports/iteration_6.json",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "success_rate": {"backend": "86% (6/7)", "frontend": "80% (all screens/flows working; modal is off-viewport on web only)"},
+  "seed_data_creation": "Backend tests seed a TEST_ workspace + TEST_ account + TEST_ transaction; UI flow clears localStorage and creates 'TEST Personal' workspace, 'TEST Wallet' account, 'TEST Coffee' ₹250.75 expense, 'TEST Cap' ₹5000 budget.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Everything works when Save is clicked via JS. Playwright cannot reach sheet-save through a normal .click() because RN <Modal> portal on web renders at y≈1357 while viewport is 844. FAB fix from iteration_5 is confirmed working (FAB y=700 inside 844 viewport). Budgets tab, spending tab, sync tab all functional. Sync-now succeeded against real backend and cleared outbox. Sync-error-banner path not exercised (backend healthy).",
+  "rca_of_issue": "React Native <Modal> renders via a portal on react-native-web. The backdrop uses flex:1 + justifyContent:flex-end, but the portal container inherits document (not viewport) height on web, so 'flex-end' pushes the sheet to the document bottom (~y=1357) rather than the visual viewport bottom (~y=844). Reproduction: open the preview URL at 390x844, create a workspace, then tap testID create-workspace — the sheet appears mostly below the fold; scroll the outer page down to see it, or measure via getBoundingClientRect on [data-testid=sheet-save]. Mitigation: for web, replace <Modal> with an absolutely-positioned overlay inside the app root (position:absolute, top:0, bottom:0, left:0, right:0) or use position:'fixed', height:'100vh' on the modal container."
+}

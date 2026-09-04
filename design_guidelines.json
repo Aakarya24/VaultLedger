@@ -1,0 +1,176 @@
+{
+  "app_name": "VaultLedger Core",
+  "personality": "1 iOS-Native Clean",
+  "personality_one_liner": "An uncompromised finance-grade offline ledger designed with iOS precision, calm neutral styling, and immutable audit trails.",
+  "color": {
+    "surface": "#F8F8F6",
+    "onSurface": "#1A1A18",
+    "surfaceSecondary": "#FFFFFF",
+    "onSurfaceSecondary": "#1A1A18",
+    "surfaceTertiary": "#EFEFEA",
+    "onSurfaceTertiary": "#555550",
+    "surfaceInverse": "#1C1C1E",
+    "onSurfaceInverse": "#F8F8F6",
+    "brand": "#385A4E",
+    "brandPrimary": "#385A4E",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#E4EBE7",
+    "onBrandSecondary": "#20342C",
+    "brandTertiary": "#D3E0D8",
+    "onBrandTertiary": "#162520",
+    "success": "#2E6930",
+    "onSuccess": "#FFFFFF",
+    "warning": "#8C6200",
+    "onWarning": "#FFFFFF",
+    "error": "#A63A3A",
+    "onError": "#FFFFFF",
+    "info": "#2B5E78",
+    "onInfo": "#FFFFFF",
+    "border": "#E2E2DC",
+    "borderStrong": "#C8C8BE",
+    "divider": "#ECECE6"
+  },
+  "typography": {
+    "displayFontFamily": "Satoshi",
+    "textFontFamily": "DM Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous vertical breathing rhythm with compact horizontal pads, touch targets >= 44x44pt.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "1",
+  "navigation": "bottom_tabs",
+  "icon_set": "Ionicons",
+  "glassmorphism": {
+    "enabled": true,
+    "do's": [
+      "Use frosted glass header and bottom tab bar over scrolling lists",
+      "Apply translucent tinted base >= 80% opacity for foreground contrast"
+    ],
+    "dont's": [
+      "Do not blur form inputs or body text",
+      "Do not stack multiple heavy blur layers"
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "AppUnlock",
+      "purpose": "Biometric session check and secure local authorization gate.",
+      "states": {
+        "loading": "Checking secure session keys...",
+        "empty": "No secure session found. Please authenticate.",
+        "error": "Biometric unlock failed. Tap to retry securely."
+      },
+      "layout": "Centered immersive card with dark frosted backdrop, fingerprint/face id glyph, and fallback PIN option."
+    },
+    {
+      "name": "WorkspaceChooser",
+      "purpose": "Select or create isolated workspace context (Personal, Family, Small Business).",
+      "states": {
+        "loading": "Loading available workspaces...",
+        "empty": "No workspaces found. Create your first workspace below.",
+        "error": "Failed to load workspaces. Tap to retry."
+      },
+      "layout": "Vertical list of workspace selector cards with active workspace highlighted, plus sticky bottom 'Create Workspace' action."
+    },
+    {
+      "name": "HomeDashboard",
+      "purpose": "Primary cash flow overview, active workspace summary, account cards, and quick add action.",
+      "states": {
+        "loading": "Syncing local ledger records...",
+        "empty": "No accounts or transactions yet. Add your first account to start tracking.",
+        "error": "Database read error. Tap to reload local store."
+      },
+      "layout": "Sticky glass header with workspace switcher, hero balance summary card with subtle gradient, horizontal account selector, and recent immutable transactions feed."
+    },
+    {
+      "name": "AccountLedger",
+      "purpose": "Append-only chronological transaction ledger with immutable audit trail and filtering.",
+      "states": {
+        "loading": "Fetching ledger entries...",
+        "empty": "No transactions match current filters.",
+        "error": "Failed to load ledger. Retry connection."
+      },
+      "layout": "Segmented filter bar at top, chronological grouped list by date, each row showing transaction note, category badge, and precise integer amount in paise (₹)."
+    },
+    {
+      "name": "AddExpense",
+      "purpose": "Validate amount in minor units and save transaction & ledger entries in one local DB transaction with outbox sync.",
+      "states": {
+        "loading": "Processing atomic ledger commit...",
+        "empty": "Enter transaction details.",
+        "error": "Validation error: Check amount format."
+      },
+      "layout": "Sheet modal with numeric currency input (INR/paise integer validation), account picker, category selector, note field, and sticky bottom primary commit CTA."
+    },
+    {
+      "name": "MonthlySpending",
+      "purpose": "Visual breakdown of monthly spending by category and budget progress.",
+      "states": {
+        "loading": "Calculating spending analytics...",
+        "empty": "No spending records for this month.",
+        "error": "Analytics calculation error. Tap to retry."
+      },
+      "layout": "Month selector header, summary progress cards against budget limits, and category breakdown bars."
+    },
+    {
+      "name": "SyncOutbox",
+      "purpose": "Offline outbox status, pending sync queue, and conflict resolution monitor.",
+      "states": {
+        "loading": "Checking sync queue...",
+        "empty": "All local changes fully synced to server.",
+        "error": "Sync server unreachable. Working offline."
+      },
+      "layout": "Status banner at top, list of pending outbox queue items with entity type, operation, retry count, and manual 'Sync Now' trigger."
+    },
+    {
+      "name": "Settings",
+      "purpose": "Secure settings, biometric lock toggle, backup, and workspace export.",
+      "states": {
+        "loading": "Loading security preferences...",
+        "empty": "No settings available.",
+        "error": "Failed to load preferences."
+      },
+      "layout": "Grouped iOS settings style list with icon containers in brandTertiary, biometric toggle, database export option, and app version info."
+    }
+  ],
+  "images": {
+    "hero_card_bg": {
+      "url": "https://images.unsplash.com/photo-1741649416166-8571a7dcd9f5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzOTB8MHwxfHNlYXJjaHwxfHxtaW5pbWFsJTIwZmluYW5jZSUyMGJhbmtpbmclMjBjYXJkJTIwYWJzdHJhY3QlMjB0ZXh0dXJlfGVufDB8fHx8MTc4NzgwNDAyMnww&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.unsplash.com/photo-1612795459707-1002f77720d2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzOTB8MHwxfHNlYXJjaHwyfHxtaW5pbWFsJTIwZmluYW5jZSUyMGJhbmtpbmclMjBjYXJkJTIwYWJzdHJhY3QlMjB0ZXh0dXJlfGVufDB8fHx8MTc4NzgwNDAyMnww&ixlib=rb-4.1.0&q=85",
+      "alt": "Minimal banking card abstract texture"
+    }
+  },
+  "instructions_to_main_agent": "Ensure absolute workspaceId isolation on all SQLite queries. Implement append-only immutable ledger entries where corrections generate adjustment records. Store monetary amounts as integer minor units (paise). Maintain offline outbox queue for FastAPI sync with version/updatedAt conflict handling. Build with Expo React Native, TypeScript, Zustand, and SQLite."
+}

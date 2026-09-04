@@ -1,0 +1,35 @@
+{
+  "summary": "Backend API regression passed; workspace and account UI flows passed, but add-expense FAB is blocked/hidden behind bottom tabs on mobile.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Home expense FAB",
+        "issue": "At 375x667 the Add expense control is rendered underneath/behind the bottom tab bar; tapping testID add-expense does not open the modal, so expense entry cannot proceed.",
+        "testID": "add-expense",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Home",
+        "issues": ["FAB overlaps the fixed bottom navigation despite bottom: 94; it appears clipped/covered in the mobile viewport."]
+      }
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_ledgerly_api.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": ["Move the add-expense FAB into a reliably visible layer above the tabs (or adjust its containing layout/z-index) and retest the complete expense-to-sync flow."],
+  "critical_code_review_comments": ["FinanceProvider sync uses EXPO_PUBLIC_BACKEND_URL while the requested configuration name is EXPO_BACKEND_URL; current environment exposes the PUBLIC variant, but the naming should be made consistent to prevent deployment misconfiguration."],
+  "updated_files": ["/app/backend/tests/test_ledgerly_api.py", "/app/test_reports/iteration_5.json"],
+  "success_rate": {"backend": "100%", "frontend": "40%"},
+  "seed_data_creation": "Created one TEST workspace and transaction via backend test; UI used cleared local storage and TEST-prefixed workspace/account before the blocked expense step.",
+  "retest_needed": true,
+  "should_call_test_agent_after_fix": true,
+  "context_for_next_testing_agent": "At 375x667, workspace and account creation pass using modal-save-top. add-expense testID resolves but is behind bottom tabs and modal does not open. Backend root/workspace/sync round-trip passes.",
+  "rca_of_issue": "The FAB is absolutely positioned inside the ScrollView content hierarchy while the tab bar is a later absolute sibling. On the mobile viewport it is clipped/covered by the tab bar; the click reaches no usable control. Reproduction: clean storage, create workspace and account, tap [data-testid=add-expense]."
+}
